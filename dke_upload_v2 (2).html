@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DKE · Gespräch bewerten</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0c0c0b;--surface:#161614;--surface2:#1e1e1b;--border:#2a2a27;--text:#e6e4de;--muted:#7a7870;--dim:#454340;--gold:#d4a843;--gold-dim:#6b521a;--gold-glow:rgba(212,168,67,.15);--green:#4ade80;--green-dim:#14532d}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+.topbar{padding:14px 36px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface)}
+.logo{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+.logo span{color:var(--gold)}
+.page{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:48px 24px}
+.container{width:100%;max-width:500px}
+.heading{margin-bottom:32px}
+.heading h1{font-size:32px;font-weight:800;letter-spacing:-.025em;margin-bottom:8px}
+.heading h1 em{font-style:normal;color:var(--gold)}
+.heading p{font-size:13px;color:var(--muted);line-height:1.6}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:10px;transition:border-color .2s}
+.step.done{border-color:var(--green-dim)}
+.step.act{border-color:var(--gold-dim);box-shadow:0 0 0 1px var(--gold-dim)}
+.step-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--muted);flex-shrink:0;transition:all .2s}
+.step.done .step-num{background:var(--green-dim);border-color:var(--green);color:var(--green)}
+.step.act .step-num{background:var(--gold);border-color:var(--gold);color:#000}
+.step-title{font-size:13px;font-weight:700}
+input[type=text]{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 15px;font-family:'Syne',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color .2s}
+input[type=text]:focus{border-color:var(--gold-dim)}
+input[type=text]::placeholder{color:var(--dim)}
+.uz{border:2px dashed var(--border);border-radius:10px;padding:26px 20px;text-align:center;cursor:pointer;background:var(--surface2);position:relative;transition:all .2s}
+.uz:hover,.uz.over{border-color:var(--gold-dim)}
+.uz input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.uz-icon{font-size:22px;margin-bottom:7px;opacity:.4}
+.uz-title{font-size:12px;font-weight:700;margin-bottom:2px}
+.uz-sub{font-size:10px;color:var(--dim);font-family:'JetBrains Mono',monospace}
+.fr{display:none;align-items:center;gap:10px;padding:11px 14px;background:color-mix(in srgb,var(--green) 10%,var(--surface2));border:1px solid color-mix(in srgb,var(--green) 30%,transparent);border-radius:9px}
+.fr.show{display:flex}
+.fr-name{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--green);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fr-rm{background:none;border:none;color:var(--green);cursor:pointer;font-size:15px;opacity:.6}
+.btn{width:100%;background:var(--gold);border:none;border-radius:12px;padding:17px 20px;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#000;cursor:pointer;transition:all .2s;margin-top:6px}
+.btn:hover:not(:disabled){background:#e0b554;transform:translateY(-1px)}
+.btn:disabled{opacity:.25;cursor:not-allowed;transform:none}
+.loading{display:none;margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px}
+.loading.show{display:block}
+.lt{font-size:13px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.spin{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ls{font-size:11px;color:var(--dim);display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;margin-bottom:6px;transition:color .3s}
+.ls.a{color:var(--gold)}
+.ls.d{color:var(--green)}
+.ls-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.result{display:none;margin-top:20px}
+.result.show{display:block}
+.rc{background:var(--surface);border:1px solid var(--green-dim);border-radius:14px;padding:22px;margin-bottom:10px}
+.rc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.rc-name{font-size:18px;font-weight:800}
+.rc-score{font-size:32px;font-weight:800;font-family:'JetBrains Mono',monospace}
+.success{background:color-mix(in srgb,var(--green) 8%,var(--surface2));border:1px solid color-mix(in srgb,var(--green) 20%,transparent);border-radius:10px;padding:14px 16px;font-size:12px;color:var(--muted);line-height:1.7}
+.success strong{color:var(--green)}
+.btn-wieder{width:100%;background:none;border:1px solid var(--border);border-radius:10px;padding:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;margin-top:8px;transition:all .2s}
+.btn-wieder:hover{background:var(--surface2);color:var(--text)}
+.anl{margin-top:28px;border-top:1px solid var(--border);padding-top:20px}
+.anl-h{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);margin-bottom:12px}
+.anl-r{display:flex;gap:9px;margin-bottom:8px}
+.anl-n{font-size:9px;font-weight:700;color:#000;background:var(--gold-dim);width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;font-family:'JetBrains Mono',monospace}
+.anl-t{font-size:11px;color:var(--muted);line-height:1.6}
+.anl-t strong{color:var(--text)}
+.anl-t code{font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--surface2);padding:1px 5px;border-radius:4px;color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">Deutsche <span>Kapital</span>entwicklung</div>
+  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim)">Bewertungssystem v7</div>
+</div>
+<div class="page">
+<div class="container">
+  <div class="heading">
+    <h1>Gespräch <em>bewerten</em></h1>
+    <p>Kundenname eingeben und VTT-Datei hochladen. Die Bewertung erscheint automatisch im Dashboard von Serkan.</p>
+  </div>
+
+  <!-- API KEY (einmalig eingeben, wird gespeichert) -->
+  <div id="key-section" style="background:var(--surface);border:1px solid var(--gold-dim);border-radius:14px;padding:20px 22px;margin-bottom:10px">
+    <div style="font-size:11px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+      <span style="color:var(--gold)">🔑</span> Anthropic API Key
+      <span style="font-size:9px;font-weight:400;color:var(--muted)">(einmalig — wird lokal gespeichert)</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <input type="password" id="apikey" placeholder="sk-ant-..." style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:10px 14px;font-family:JetBrains Mono,monospace;font-size:12px;color:var(--text);outline:none">
+      <button onclick="saveKey()" style="background:var(--gold);border:none;border-radius:9px;padding:10px 16px;font-family:Syne,sans-serif;font-size:12px;font-weight:700;color:#000;cursor:pointer">Speichern</button>
+    </div>
+    <div id="key-status" style="font-size:10px;color:var(--muted);margin-top:7px;font-family:JetBrains Mono,monospace"></div>
+  </div>
+
+  <div class="step" id="s1">
+    <div class="step-head"><div class="step-num" id="n1">1</div><div class="step-title">Kundenname eingeben</div></div>
+    <input type="text" id="kunde" placeholder="z.B. Max Müller" oninput="check()">
+  </div>
+
+  <div class="step" id="s2">
+    <div class="step-head"><div class="step-num" id="n2">2</div><div class="step-title">VTT-Datei auswählen</div></div>
+    <div class="uz" id="uz">
+      <input type="file" id="fi" accept=".vtt,.txt" onchange="setFile(this.files[0])">
+      <div class="uz-icon">📄</div>
+      <div class="uz-title">Datei hier ablegen oder klicken</div>
+      <div class="uz-sub">.vtt Transkript aus Zoom</div>
+    </div>
+    <div class="fr" id="fr">
+      <span style="color:var(--green)">✓</span>
+      <span class="fr-name" id="fn"></span>
+      <button class="fr-rm" onclick="rmFile()">✕</button>
+    </div>
+  </div>
+
+  <button class="btn" id="btn" onclick="start()" disabled>Jetzt bewerten →</button>
+
+  <div class="loading" id="loading">
+    <div class="lt"><div class="spin"></div>Bewertung läuft…</div>
+    <div class="ls" id="l1"><div class="ls-dot"></div>Transkript einlesen</div>
+    <div class="ls" id="l2"><div class="ls-dot"></div>Gesprächstyp erkennen</div>
+    <div class="ls" id="l3"><div class="ls-dot"></div>Alle 6 Kategorien prüfen</div>
+    <div class="ls" id="l4"><div class="ls-dot"></div>Coaching-Punkte generieren</div>
+    <div class="ls" id="l5"><div class="ls-dot"></div>Im Dashboard speichern</div>
+  </div>
+
+  <div class="result" id="result">
+    <div class="rc">
+      <div class="rc-head">
+        <div><div class="rc-name" id="rc-name"></div><div style="font-size:11px;color:var(--muted);margin-top:3px" id="rc-sub"></div></div>
+        <div><div class="rc-score" id="rc-score"></div><div style="font-size:9px;color:var(--muted);text-align:right;text-transform:uppercase;letter-spacing:.1em">Score</div></div>
+      </div>
+      <div id="rc-closing" style="font-size:12px;color:var(--muted)"></div>
+    </div>
+    <div class="success">✓ <strong>Bewertung gespeichert.</strong> Serkan sieht das Ergebnis jetzt im Dashboard.</div>
+    <button class="btn-wieder" onclick="reset()">Nochmal bewerten →</button>
+  </div>
+
+  <div class="anl">
+    <div class="anl-h">Wo finde ich die VTT-Datei?</div>
+    <div class="anl-r"><div class="anl-n">1</div><div class="anl-t">Zoom öffnen → oben auf <strong>Recordings</strong> klicken</div></div>
+    <div class="anl-r"><div class="anl-n">2</div><div class="anl-t">Aufnahme anklicken → <code>Audio transcript (.vtt)</code> herunterladen</div></div>
+    <div class="anl-r"><div class="anl-n">3</div><div class="anl-t">Diese Datei oben hochladen — fertig</div></div>
+  </div>
+</div>
+</div>
+
+<script>
+// ── KONFIGURATION ─────────────────────────────────────────
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbzAdndAIltdIuWemn2GG0VbepLOD_ZWHndTIeLDtMJ0YHNMRsQoiNkOS1OahcoPEVoUZA/exec';
+var API_KEY = localStorage.getItem('dke_api_key') || '';
+// ─────────────────────────────────────────────────────────
+
+var PROMPT = 'Du bist das Bewertungssystem fuer Deutsche Kapitalentwicklung GmbH (DKE). Serkan Dogan ist Geschaeftsfuehrer.' +
+  ' Fuehre automatisch eine vollstaendige Bewertung durch. Keine Rueckfragen, direkt bewerten.' +
+  ' Berater-Liste: Sabrina, Eray Tikves, Haroun, Moudi, Juergen Zahn, Mert, Markus, Sarah, Serkan Dogan, Feray Acikgoez, Moaz Suisse, Muad.' +
+  ' Gewichtung: K1=5%, K2=5%, K3=15%, K4=40%, K5=15%, K6=20%.' +
+  ' K1 (5 Punkte je 20%): Name/Alter/Herkunft, Beruf/Erfahrung, Eigene Immobilien, DU-Abfrage, Fragen zur Person.' +
+  ' K2 (4 Punkte je 25%): Ablauf erklaert, Heute nichts kaufen (PFLICHT), Nur ums Verstehen (PFLICHT), Meld dich wenn unklar.' +
+  ' K3 (5 Punkte je 20%): Persoenliche Situation, Beruf und Ziel, Einkommen und Vertrag, Finanzen, Ausgaben.' +
+  ' K4 (13 Folien je 0-100%): K4a 3 Varianten, K4b EH vs KA, K4c Rechenbeispiel, K4d Finanzierung, K4e Verdienst, K4f Risiko-Bank, K4g Kuchendiagramm, K4h AfA Steuer, K4i Anf.Immobilie, K4j Anf.Kunde, K4k Wertsteigerung 10J, K4l 2 Konten, K4m Zusammenfassung. K4n Hebeleffekt = BONUS +1%.' +
+  ' K5 (4 Punkte je 25%): Lage-Einwand, Verwaltung, Eigenheim-Einwand, Partner/Sonstige.' +
+  ' K6 (5 Schritte je 20%): Zusammenfassung+Fragen, Angebot-Erlaubnis, Termin PM, Selbstauskunft, Landung.' +
+  ' Antworte NUR mit reinem JSON ohne jeglichen Text davor oder danach und ohne Markdown:' +
+  ' {"kunde":"Name","berater":"Name","typ":"Erstberatung","datum":"TT.MM.JJJJ","k1":75,"k2":50,"k3":80,"k4":[60,70,80,50,90,40,75,30,85,70,20,10,40],"k5":60,"k6":[80,60,70,50,40],"bonus":false,"closing":"45% Kurzbeschreibung","clc":"o","potenzial":"Moeglich","potenzialNote":"Begruendung","profil":{"Beruf":"...","Einkommen netto":"...","Vertrag":"...","Wohnort":"...","Familienstand":"...","Kinder":"...","Ruecklagen":"...","Kredite":"..."},"term":true,"termNote":"Details","alerts":[{"l":"r","t":"Kritisch"},{"l":"o","t":"Leitfaden"},{"l":"g","t":"Staerke"}]}';
+
+var fileObj = null;
+
+// API Key Management
+function saveKey(){
+  var k = document.getElementById('apikey').value.trim();
+  if(!k.startsWith('sk-ant-')){
+    document.getElementById('key-status').textContent = 'Ungueltig — Key muss mit sk-ant- beginnen';
+    document.getElementById('key-status').style.color = '#f87171';
+    return;
+  }
+  API_KEY = k;
+  localStorage.setItem('dke_api_key', k);
+  document.getElementById('key-status').textContent = 'Gespeichert!';
+  document.getElementById('key-status').style.color = '#4ade80';
+  document.getElementById('key-section').style.borderColor = 'var(--green-dim)';
+}
+
+// Check if key already saved
+window.addEventListener('load', function(){
+  var saved = localStorage.getItem('dke_api_key');
+  if(saved){
+    API_KEY = saved;
+    document.getElementById('apikey').value = saved;
+    document.getElementById('key-status').textContent = 'Key geladen';
+    document.getElementById('key-status').style.color = '#4ade80';
+    document.getElementById('key-section').style.borderColor = 'var(--green-dim)';
+  }
+});
+
+var uz = document.getElementById('uz');
+uz.addEventListener('dragover', function(e){e.preventDefault();uz.classList.add('over')});
+uz.addEventListener('dragleave', function(){uz.classList.remove('over')});
+uz.addEventListener('drop', function(e){e.preventDefault();uz.classList.remove('over');if(e.dataTransfer.files[0])setFile(e.dataTransfer.files[0])});
+
+function setFile(f){
+  fileObj=f;
+  document.getElementById('fn').textContent=f.name;
+  document.getElementById('fr').classList.add('show');
+  document.getElementById('uz').style.display='none';
+  document.getElementById('s2').classList.add('done');
+  document.getElementById('n2').textContent='✓';
+  check();
+}
+function rmFile(){
+  fileObj=null;
+  document.getElementById('fr').classList.remove('show');
+  document.getElementById('uz').style.display='block';
+  document.getElementById('fi').value='';
+  document.getElementById('s2').classList.remove('done');
+  document.getElementById('n2').textContent='2';
+  check();
+}
+function check(){
+  var k=document.getElementById('kunde').value.trim();
+  var ok=k.length>0&&fileObj;
+  document.getElementById('btn').disabled=!ok;
+  document.getElementById('s1').classList.toggle('done',k.length>0);
+  document.getElementById('s1').classList.toggle('act',k.length>0);
+  document.getElementById('n1').textContent=k.length>0?'✓':'1';
+}
+
+function step(id,state){
+  var el=document.getElementById(id);
+  el.classList.remove('a','d');
+  if(state==='a')el.classList.add('a');
+  if(state==='d')el.classList.add('d');
+}
+
+function col(v){return v>=70?'#4ade80':v>=45?'#fbbf24':'#f87171'}
+
+async function start(){
+  if(!API_KEY || !API_KEY.startsWith('sk-ant-')){
+    alert('Bitte zuerst den Anthropic API Key eingeben und speichern!');
+    return;
+  }
+  var kunde=document.getElementById('kunde').value.trim();
+  document.getElementById('btn').disabled=true;
+  document.getElementById('loading').classList.add('show');
+
+  // Animierte Schritte
+  var steps=['l1','l2','l3','l4','l5'];
+  var delays=[0,1500,3200,5000,7000];
+  steps.forEach(function(id,i){
+    setTimeout(function(){
+      steps.forEach(function(x){step(x,'')});
+      step(id,'a');
+    }, delays[i]);
+  });
+
+  // Datei lesen
+  var txt = await new Promise(function(res){
+    var r=new FileReader();
+    r.onload=function(e){res(e.target.result)};
+    r.readAsText(fileObj);
+  });
+
+  try {
+    // Anthropic API direkt aufrufen
+    var aiResp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        system: PROMPT,
+        messages: [{role:'user', content:'Bitte bewerten - Kunde: ' + kunde + '\n\nTRANSKRIPT:\n' + txt.substring(0,80000)}]
+      })
+    });
+
+    var aiData = await aiResp.json();
+    if(aiData.error) throw new Error(aiData.error.message);
+
+    var rawText = aiData.content.filter(function(b){return b.type==='text'}).map(function(b){return b.text}).join('');
+
+    // JSON extrahieren - alles vor { und nach } entfernen
+    var jsonStart = rawText.indexOf('{');
+    var jsonEnd = rawText.lastIndexOf('}');
+    if(jsonStart===-1||jsonEnd===-1) throw new Error('Kein JSON in Antwort gefunden');
+    var r = JSON.parse(rawText.substring(jsonStart, jsonEnd+1));
+
+    r.id = Date.now().toString();
+    r.ts = new Date().toISOString();
+    if(!r.kunde) r.kunde = kunde;
+
+    // Alle Schritte abschliessen
+    steps.forEach(function(id){step(id,'d')});
+    step('l5','a');
+
+    // Ins Sheet speichern via GET (kein CORS-Problem)
+    var saveUrl = GAS_URL + '?action=speichern&data=' + encodeURIComponent(JSON.stringify(r));
+    try {
+      await fetch(saveUrl, {mode:'no-cors'});
+    } catch(e) {
+      console.log('Sheet-Speichern Fehler (ignorierbar):', e);
+    }
+    step('l5','d');
+
+    // Score berechnen
+    var k4a=r.k4?Math.round(r.k4.reduce(function(s,v){return s+v},0)/r.k4.length):0;
+    var k6a=r.k6?Math.round(r.k6.reduce(function(s,v){return s+v},0)/r.k6.length):0;
+    var total=Math.round((r.k1||0)*.05+(r.k2||0)*.05+(r.k3||0)*.15+k4a*.40+(r.k5||0)*.15+k6a*.20+(r.bonus?1:0));
+
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('result').classList.add('show');
+    document.getElementById('rc-name').textContent=r.kunde;
+    document.getElementById('rc-sub').textContent=(r.berater||'')+(r.datum?' · '+r.datum:'');
+    document.getElementById('rc-score').textContent=total+'%';
+    document.getElementById('rc-score').style.color=col(total);
+    document.getElementById('rc-closing').textContent=r.closing||'';
+
+  } catch(e) {
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('btn').disabled=false;
+    document.getElementById('btn').textContent='⚠ Fehler - nochmal versuchen';
+    alert('Fehler: ' + e.message);
+    console.error(e);
+  }
+}
+
+function reset(){
+  fileObj=null;
+  document.getElementById('kunde').value='';
+  document.getElementById('fr').classList.remove('show');
+  document.getElementById('uz').style.display='block';
+  document.getElementById('fi').value='';
+  ['s1','s2'].forEach(function(id){document.getElementById(id).classList.remove('done','act')});
+  document.getElementById('n1').textContent='1';
+  document.getElementById('n2').textContent='2';
+  document.getElementById('result').classList.remove('show');
+  document.getElementById('btn').textContent='Jetzt bewerten →';
+  document.getElementById('btn').disabled=true;
+  ['l1','l2','l3','l4','l5'].forEach(function(id){step(id,'')});
+}
+</script>
+</body>
+</html>
