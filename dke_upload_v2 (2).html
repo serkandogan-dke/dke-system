@@ -155,7 +155,7 @@ var API_KEY = localStorage.getItem('dke_api_key') || '';
 
 var PROMPT = 'Du bist das Bewertungssystem fuer Deutsche Kapitalentwicklung GmbH (DKE). Serkan Dogan ist Geschaeftsfuehrer.' +
   ' Fuehre automatisch eine vollstaendige Bewertung durch. Keine Rueckfragen, direkt bewerten.' +
-  ' Berater-Liste: Sabrina, Eray Tikves, Haroun, Moudi, Juergen Zahn, Mert, Markus, Sarah, Serkan Dogan, Feray Acikgoez, Moaz Suisse, Muad.' +
+  ' Berater-Liste: Sabrina Frank, Sarah Zahn, Juergen Zahn, Feray Acikgoez, Oemer Efe, Serkan Dogan, Haroun Boumaiza, Valentin Berger, Mouadh Souissi, Eray Tikves, Markus Dehelean, Chrissy Brandenburger.' +
   ' Gewichtung: K1=5%, K2=5%, K3=15%, K4=40%, K5=15%, K6=20%.' +
   ' K1 (5 Punkte je 20%): Name/Alter/Herkunft, Beruf/Erfahrung, Eigene Immobilien, DU-Abfrage, Fragen zur Person.' +
   ' K2 (4 Punkte je 25%): Ablauf erklaert, Heute nichts kaufen (PFLICHT), Nur ums Verstehen (PFLICHT), Meld dich wenn unklar.' +
@@ -298,12 +298,14 @@ async function start(){
     steps.forEach(function(id){step(id,'d')});
     step('l5','a');
 
-    // Ins Sheet speichern via GET (kein CORS-Problem)
-    var saveUrl = GAS_URL + '?action=speichern&data=' + encodeURIComponent(JSON.stringify(r));
+    // Ins Google Form schicken (kein CORS-Problem)
     try {
-      await fetch(saveUrl, {mode:'no-cors'});
+      var formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdKAT46imKfC9BkKvAgAFmvheI3Tmjiqr6GkoNvbYJc0Ia_OQ/formResponse';
+      var formData = new FormData();
+      formData.append('entry.160843423', JSON.stringify(r));
+      await fetch(formUrl, {method:'POST', mode:'no-cors', body: formData});
     } catch(e) {
-      console.log('Sheet-Speichern Fehler (ignorierbar):', e);
+      console.log('Form-Fehler:', e);
     }
     step('l5','d');
 
